@@ -1,7 +1,9 @@
 package com.devsuperior.dscatalog.services;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.devsuperior.dscatalog.dto.CategoryDTO;
 import com.devsuperior.dscatalog.entities.Category;
 import com.devsuperior.dscatalog.repositories.CategoryResitory;
 
@@ -16,8 +18,11 @@ public class CategoryService {
     private CategoryResitory repository;
 
     @Transactional(readOnly = true)
-    public List<Category> findAll() {
-        return repository.findAll();
+    public List<CategoryDTO> findAll() {
+        List<Category> list = repository.findAll();
+
+        return list.stream().map(x -> new CategoryDTO(x)).collect(Collectors.toList());
+
     }
 
 }
