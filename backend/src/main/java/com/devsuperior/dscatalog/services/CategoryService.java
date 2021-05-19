@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.devsuperior.dscatalog.services.exceptions.EntityNotFoundException;
+import javax.persistence.EntityNotFoundException;
+
+import com.devsuperior.dscatalog.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dscatalog.dto.CategoryDTO;
 import com.devsuperior.dscatalog.entities.Category;
 import com.devsuperior.dscatalog.repositories.CategoryResitory;
@@ -30,16 +32,30 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public CategoryDTO findById(Long id) {
         Optional<Category> obj = repository.findById(id);
-        Category entity = obj.orElseThrow(() -> new EntityNotFoundException("Entity not found"));
+        Category entity = obj.orElseThrow(() -> new ResourceNotFoundException("Entity not found"));
         return new CategoryDTO(entity);
     }
 
     @Transactional
     public CategoryDTO insert(CategoryDTO dto) {
         Category entity = new Category();
-		entity.setName(dto.getName());
-		entity = repository.save(entity);
-		return new CategoryDTO(entity);
+        entity.setName(dto.getName());
+        entity = repository.save(entity);
+        return new CategoryDTO(entity);
     }
+
+    @Transactional
+	public CategoryDTO update(Long id, CategoryDTO dto) {   // metodo para atualizar um registro
+		try {
+			Category entity = repository.getOne(id);            // utilizar getOne em vez do findById para não ir no banco
+			entity.setName(dto.getName());                      // de dados sem nescessidade.
+			entity = repository.save(entity);
+			return new CategoryDTO(entity);
+		}
+		catch (EntityNotFoundException e) {
+			throw new ResourceNotFoundException("id não encontrado" + id);
+		}
+
+	}
 
 }
