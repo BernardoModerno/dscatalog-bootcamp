@@ -5,50 +5,50 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
-
-import com.devsuperior.dscatalog.services.exceptions.ResourceNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.devsuperior.dscatalog.dto.CategoryDTO;
 import com.devsuperior.dscatalog.entities.Category;
 import com.devsuperior.dscatalog.repositories.CategoryResitory;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.devsuperior.dscatalog.services.exceptions.DatabaseException;
+import com.devsuperior.dscatalog.services.exceptions.ResourceNotFoundException;
 
 @Service
 public class CategoryService {
 
-    @Autowired
-    private CategoryResitory repository;
+	@Autowired
+	private CategoryResitory repository;
 
-    @Transactional(readOnly = true)
-    public List<CategoryDTO> findAll() {
-        List<Category> list = repository.findAll();
+	@Transactional(readOnly = true)
+	public List<CategoryDTO> findAll() {
+		List<Category> list = repository.findAll();
+		return list.stream().map(x -> new CategoryDTO(x)).collect(Collectors.toList());
 
-        return list.stream().map(x -> new CategoryDTO(x)).collect(Collectors.toList());
+	}
 
-    }
+	@Transactional(readOnly = true)
+	public CategoryDTO findById(Long id) {
+		Optional<Category> obj = repository.findById(id);
+		Category entity = obj.orElseThrow(() -> new ResourceNotFoundException("Entidade não encontrada"));
+		return new CategoryDTO(entity);
+	}
 
-    @Transactional(readOnly = true)
-    public CategoryDTO findById(Long id) {
-        Optional<Category> obj = repository.findById(id);
-        Category entity = obj.orElseThrow(() -> new ResourceNotFoundException("Entity not found"));
-        return new CategoryDTO(entity);
-    }
+	@Transactional
+	public CategoryDTO insert(CategoryDTO dto) {
+		Category entity = new Category();
+		entity.setName(dto.getName());
+		entity = repository.save(entity);
+		return new CategoryDTO(entity);
+	}
 
-    @Transactional
-    public CategoryDTO insert(CategoryDTO dto) {
-        Category entity = new Category();
-        entity.setName(dto.getName());
-        entity = repository.save(entity);
-        return new CategoryDTO(entity);
-    }
-
-    @Transactional
-	public CategoryDTO update(Long id, CategoryDTO dto) {   // metodo para atualizar um registro
+	@Transactional
+	public CategoryDTO update(Long id, CategoryDTO dto) {
 		try {
-			Category entity = repository.getOne(id);            // utilizar getOne em vez do findById para não ir no banco
-			entity.setName(dto.getName());                      // de dados sem nescessidade.
+			Category entity = repository.getOne(id);
+			entity.setName(dto.getName());
 			entity = repository.save(entity);
 			return new CategoryDTO(entity);
 		}
@@ -57,5 +57,19 @@ public class CategoryService {
 		}
 
 	}
+
+	public void delete(Long id) {                        
+		try {
+			repository.deleteById(id);
+		}
+		catch (EmptyResultDataAccessException e) {
+			throw new ResourceNotFoundException("id não encontrado" + id);
+		}
+		catch (DataIntegrityViolationException e) {
+			throw new DatabaseException("Violação de integridade");
+		}
+	}
+
+
 
 }
