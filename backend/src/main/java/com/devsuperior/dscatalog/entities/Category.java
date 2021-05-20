@@ -1,17 +1,20 @@
 package com.devsuperior.dscatalog.entities;
 
 import java.io.Serializable;
+import java.time.Instant;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "tb_category")
 public class Category implements Serializable{
-
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -19,25 +22,57 @@ public class Category implements Serializable{
 	private Long id;
 	private String name;
 
+	@Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+	private Instant createdAt; // atributo para armezenar o instante que o registro foi criado pela primeira vez
+
+	@Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+	private Instant updateddAt; // atributo para armezenar o instante que o registro foi criado pela primeira vez
+
 	public Category() {
 
 	}
+
 	public Category(Long id, String name) {
 		this.id = id;
 		this.name = name;
 	}
+
 	public Long getId() {
 		return id;
 	}
+
 	public void setId(Long id) {
 		this.id = id;
 	}
+
 	public String getName() {
 		return name;
 	}
+
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public Instant getCreatedAt() {
+		return createdAt;
+	}
+
+	public Instant getUpdateddAt() {
+		return updateddAt;
+	}
+
+	//metodo auxiliar para sempre que for salvar uma categoria, o metodo armazana no createdAt o instante atual
+	@PrePersist
+	public void prePersist() {
+		createdAt = Instant.now();
+	}
+
+	// metodo auxiliar para sempre que for atualizar, o metodo armazena no updatedAt o instante atual
+	@PreUpdate
+	public void preUpdate() {
+		updateddAt = Instant.now();
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -45,6 +80,7 @@ public class Category implements Serializable{
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
